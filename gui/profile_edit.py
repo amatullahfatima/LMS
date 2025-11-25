@@ -3,7 +3,6 @@ from tkinter import messagebox, filedialog
 from database.db import get_user_data, get_db_connection
 from gui.widgets.profile_picture import create_profile_picture_frame
 
-
 def edit_profile(root, user_email):
     """Open a separate window for editing the user profile."""
     edit_win = tk.Toplevel()
