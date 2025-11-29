@@ -1,7 +1,7 @@
-import tkinter as tk 
-from tkinter import messagebox
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+from database.db import reset_password_db
 
-from database.db import reset_password_db 
 
 def clear_window(root):
     for widget in root.winfo_children():
@@ -10,7 +10,7 @@ def clear_window(root):
 def show_forgot_password_screen(root):
     clear_window(root)
     root.title("Forgot Password")
-
+    root.geometry("480x340")
     main_frame = tk.Frame(root, padx=20, pady=20)
     main_frame.pack(expand=True)
 
@@ -45,20 +45,29 @@ def show_forgot_password_screen(root):
         if len(new_pw) < 6:
             messagebox.showerror("Error", "Password must be at least 6 characters.")
             return
-
-        # ✅ Call the separate database function
-        result, message = reset_password_db(email, new_pw)
+        passInput = simpledialog.askstring("Enter Administrator password",prompt='Enter The Password....' ,show="x")
+        result = False
+        message = '...Wrong Password!\nPassword Not changed\nTry Again....'
+        if passInput == 'adm123':
+          print("Password Accepted")
+          result, message = reset_password_db(email, new_pw)
 
         if result:
-            messagebox.showinfo("Success", message)
-            go_back_to_login(root)
+         messagebox.showinfo("Success", message)
+         messagebox.showinfo("Password Changed", f"Password Updated for: {email}")
+         go_back_to_login(root)
         else:
-            messagebox.showerror("Error", message)
+         messagebox.showerror("Error", message)
+         show_forgot_password_screen(root)
+
+
+
+
+
+
 
     tk.Button(main_frame, text="Reset Password", width=20, command=reset_password).grid(row=4, column=0, columnspan=2, pady=10)
     tk.Button(main_frame, text="Back to Login", width=20, command=lambda: go_back_to_login(root)).grid(row=5, column=0, columnspan=2, pady=5)
-
-
 
     def go_back_to_login(root):
         from gui.login import show_login_screen 

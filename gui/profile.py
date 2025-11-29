@@ -6,7 +6,6 @@ import os
 from gui.widgets.profile_picture import create_profile_picture_frame
 
 
-
 def show_user_profile(root, user_email):
     from gui.dashboard import clear_window, show_user_dashboard
 
@@ -19,7 +18,6 @@ def show_user_profile(root, user_email):
         show_user_dashboard(root, user_email, None)
         return
 
-    
 
     main_frame = tk.Frame(root, padx=20, pady=20)
     main_frame.pack(expand=True)

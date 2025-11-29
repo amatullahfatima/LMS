@@ -76,7 +76,7 @@ def setup_database():
         );
 
         """)
-        admin_password_hash = hash_password('admin123')
+        admin_password_hash = hash_password('adm123')
         try:
             cursor.execute("INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)",
                            (ADMIN_USER, admin_password_hash, 'Administrator', 'admin'))
