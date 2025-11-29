@@ -1,6 +1,7 @@
-
+import smtplib
 # gui/posts.py
 import tkinter as tk
+from email.message import EmailMessage
 from tkinter import messagebox, simpledialog
 from database.db import (
     create_post,
@@ -12,6 +13,34 @@ from database.db import (
     get_comment_count,
     get_reaction_summary
 )
+email = 'socialmediadallascollege@gmail.com'
+
+#send a warning to user email inbox
+def send_warning(Email, UserName, Content, DatePosted):
+    print(f"Sending warning to {Email}:")
+    print(f"DatePosted: {DatePosted}")
+    print(f"UserName: {UserName}")
+    print(f"Content: {Content}")
+    sender_email = email
+    receiver_email = Email
+    password = 'hndp egcm bkrl itgy'  # Use an app password for security, not your main password
+    msg = EmailMessage()
+    msg['Subject'] = 'Dallas College , Social Media | Content Flagged'
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg.set_content(f"Att {UserName}:\nA report was submitted to the administrator\n"
+                        f"posting flagged/reported: {Content}\n"
+                        f"date posted: {DatePosted}\nplease review the content,"
+                        f"correct any posting that violates the rules\nto avoid be banned"
+                        f"from the app. Thanks ")
+    try:
+        # Connect to the SMTP server (e.g., Gmail's)
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, password)
+            server.send_message(msg)
+        messagebox.showinfo("Success!!!", "Email sent successfully")
+    except Exception as e:
+     messagebox.showerror("Error!!!", f" Error sending the email \n{e}")
 
 
 def open_posts_window(user_email):
@@ -20,7 +49,7 @@ def open_posts_window(user_email):
     post_win.geometry("600x500")
     post_win.configure(bg="white")
 
-    tk.Label(post_win, text="Feed", font=("Arial", 18, "bold"), bg="white").pack(pady=10)
+    tk.Label(post_win, text="Feed", font=("Times New Roman", 15, "bold"), bg="gray").pack(pady=10)
 
     post_text = tk.Text(post_win, height=4, width=65, relief="solid", borderwidth=1)
     post_text.pack(pady=10)
@@ -101,9 +130,24 @@ def open_posts_window(user_email):
 
             # --- DISLIKE BUTTON ---
             def dislike_post(pid=post_id):
+                posts = fetch_posts()
+                for p in posts:
+                    if p[0] == pid:
+                        postings = f"post ID : {p[0]}  - email :{p[1]} - User Name: {p[2]} - content: ({p[3]}) - posted : {p[4]}\n"
+                        with open('flagged.txt', 'a') as file:
+                         file.write(postings)
+                    print(f"flagged:\n\t{p[0]}  -  {p[1]} -  {p[2]} -  ({p[3]}) - {p[4]}")
+                    Email = p[1]
+                    UserName = p[2]
+                    Content = p[3]
+                    DatePosted = p[4]
                 set_post_reaction(pid, user_email, "dislike")
                 refresh_feed()
 
+                r = tk.messagebox.askyesno("Report", "Would you like to report or flagg this post?", icon="warning")
+                if r:
+                    send_warning(Email, UserName, Content, DatePosted)
+                    print("Post was flagged")
             tk.Button(btn_frame,
                       text=f"Dislike ({dislikes})",
                       width=10,

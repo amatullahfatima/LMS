@@ -74,9 +74,15 @@ def edit_profile(root, user_email):
 
     tk.Button(
         edit_win, text="Save Changes",
-        bg="#4CAF50", fg="gray", width=20,
-        command=save_profile
+        bg="#4CAF50", fg="black", width=20,
+        command=lambda : save_profile()
     ).pack(pady=2)
-  
+
+    tk.Button(
+     edit_win, text="Cancel",
+        bg="#4CAF50", fg="red", width=20,
+        command=lambda: edit_win.destroy()
+    ).pack(pady=2)
+
   
   
