@@ -6,6 +6,8 @@ from gui.dashboard import show_user_dashboard, show_admin_dashboard
 from gui.profile import show_user_profile
 from gui.register import  show_registration_screen
 from gui.forgot_password import show_forgot_password_screen
+from gui.theme_manager import apply_theme  
+
 ADMIN_USER = 'admin@dcccd.edu'
 ADMIN_PASSWORD = 'adm123'
 
@@ -56,3 +58,4 @@ def show_login_screen(root):
     register_button.grid(row=4, column=0, columnspan=2, pady=5)
 
     tk.Button(main_frame, text="Forgot Password?", width=20, command=lambda: show_forgot_password_screen(root)).grid(row=5, column=0, columnspan=2, pady=5)
+    apply_theme(main_frame)

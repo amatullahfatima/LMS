@@ -10,15 +10,19 @@ from gui.changePassword import change_password
 from gui.posts import open_posts_window
 from gui.search import search_students
 from gui.widgets.profile_picture import create_profile_picture_frame
+from gui.theme_manager import toggle_theme , apply_theme
+from gui.theme_utils import switch_theme
 
 def clear_window(root):
     for widget in root.winfo_children():
         widget.destroy()
-
+    apply_theme(root)
+    
 def show_user_dashboard(root, user_email, user_id):
     clear_window(root)
     root.title("User Dashboard")
     root.geometry("1300x1100")
+  
 
     user_data = get_user_data(user_email)
     if not user_data:
@@ -29,6 +33,8 @@ def show_user_dashboard(root, user_email, user_id):
 
     main_frame = tk.Frame(root, padx=50, pady=50)
     main_frame.pack(expand=True)
+   
+
     pic_frame = create_profile_picture_frame(main_frame, user_email, user_data.get("profile_picture"), editable=False)
     pic_frame.pack(pady=10)
     tk.Label(main_frame, text=f"Welcome, {user_data.get('name', 'User')}!", font=("Arial", 18, "bold")).pack(pady=10)
@@ -40,7 +46,9 @@ def show_user_dashboard(root, user_email, user_id):
     tk.Button(main_frame, text="Open Posts", width=30, command=lambda: open_posts_window(user_email)).pack(pady=3)
     tk.Button(main_frame, text="Logout", width=30, command=lambda: from_gui_login(root)).pack(pady=3)
     tk.Button(main_frame,text="Change Password" ,width=30,command=lambda:change_password(user_data)).pack(pady=6)
+    tk.Button(main_frame,text="🌓" ,width=30,command=lambda: switch_theme(root)).pack(pady=6)
 
+    apply_theme(main_frame)
 
 def from_gui_login(root):
     from gui.login import show_login_screen
