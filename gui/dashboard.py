@@ -133,8 +133,9 @@ def displayFlagged():
                   text=f"Delete?",
                   width=12,
                   bg="#d9d9d9",
-                  command=delete_post(5,"mjosuea@gmail.com")).pack(side="left", padx=5)
+                  command=delete_post(1,"mjosuea@gmail.com")).pack(side="left", padx=5)
         i += 1
+
 
 
 
