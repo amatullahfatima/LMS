@@ -2,14 +2,15 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 from database.db import get_user_data, get_db_connection
 from gui.widgets.profile_picture import create_profile_picture_frame
-
+from gui.theme_manager import apply_theme  
 
 def edit_profile(root, user_email):
     """Open a separate window for editing the user profile."""
+    name = get_user_data(user_email)["name"]
     edit_win = tk.Toplevel()
-    edit_win.title("Edit Profile")
-    edit_win.geometry("450x500")
-    edit_win.resizable(True, True)
+    edit_win.title(f"{name} | Edit Profile...")
+    edit_win.geometry("400x650")
+    edit_win.resizable(True,True)
 
     # Get user data using existing helper function
     user_data = get_user_data(user_email)
@@ -26,7 +27,7 @@ def edit_profile(root, user_email):
     role_var = tk.StringVar(value=user_data.get("role", ""))
     pic_var = tk.StringVar(value=user_data.get("profile_picture", ""))
 
-    tk.Label(edit_win, text="Edit Profile", font=("Arial", 16, "bold")).pack(pady=10)
+    tk.Label(edit_win, text="Edit Profile", font=("Arial", 12, "bold")).pack(pady=2)
 
   
      #Show profile picture (using helper function)
@@ -35,10 +36,10 @@ def edit_profile(root, user_email):
         user_email,
         user_data.get("profile_picture")
     )
-    profile_pic_frame.pack(pady=10)
+    profile_pic_frame.pack(pady=2)
     def labeled_entry(label, var):
-        tk.Label(edit_win, text=label).pack(pady=4)
-        tk.Entry(edit_win, textvariable=var).pack(pady=3)
+        tk.Label(edit_win, text=label).pack(pady=2)
+        tk.Entry(edit_win, textvariable=var).pack(pady=2)
 
     labeled_entry("Name:", name_var)
     labeled_entry("Email:", email_var)
@@ -74,9 +75,16 @@ def edit_profile(root, user_email):
 
     tk.Button(
         edit_win, text="Save Changes",
-        bg="#4CAF50", fg="white", width=20,
-        command=save_profile
-    ).pack(pady=15)
+        bg="#4CAF50", fg="black", width=20,
+        command=lambda : save_profile()
+    ).pack(pady=2)
+
+    tk.Button(
+     edit_win, text="Cancel",
+        bg="#4CAF50", fg="red", width=20,
+        command=lambda: edit_win.destroy()
+    ).pack(pady=2)
+
   
-  
-  
+     # Apply theme again so new buttons/labels also get styled
+    apply_theme(edit_win)

@@ -6,7 +6,10 @@ from gui.dashboard import show_user_dashboard, show_admin_dashboard
 from gui.profile import show_user_profile
 from gui.register import  show_registration_screen
 from gui.forgot_password import show_forgot_password_screen
+from gui.theme_manager import apply_theme  
+
 ADMIN_USER = 'admin@dcccd.edu'
+ADMIN_PASSWORD = 'adm123'
 
 def clear_window(root):
     for widget in root.winfo_children():
@@ -36,16 +39,15 @@ def show_login_screen(root):
     main_frame.pack(expand=True)
 
     tk.Label(main_frame, text="User Login", font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
-
     tk.Label(main_frame, text="Email:").grid(row=1, column=0, sticky="w", pady=5)
     email_entry = tk.Entry(main_frame, width=30)
     email_entry.grid(row=1, column=1, pady=5)
-    email_entry.insert(0, ADMIN_USER)
+   # email_entry.insert(0, ADMIN_USER)
 
     tk.Label(main_frame, text="Password:").grid(row=2, column=0, sticky="w", pady=5)
     password_entry = tk.Entry(main_frame, width=30, show="*")
     password_entry.grid(row=2, column=1, pady=5)
-    password_entry.insert(0, "admin123")
+    #password_entry.insert(0, ADMIN_PASSWORD)
 
     login_button = tk.Button(main_frame, text="Login", width=20,
                              command=lambda: process_login(root, email_entry.get(), password_entry.get()))
@@ -56,3 +58,4 @@ def show_login_screen(root):
     register_button.grid(row=4, column=0, columnspan=2, pady=5)
 
     tk.Button(main_frame, text="Forgot Password?", width=20, command=lambda: show_forgot_password_screen(root)).grid(row=5, column=0, columnspan=2, pady=5)
+    apply_theme(main_frame)

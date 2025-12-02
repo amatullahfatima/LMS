@@ -47,4 +47,5 @@ def show_registration_screen(root):
         else:
             messagebox.showerror("Error", "Email already exists. Try a different one.")
 
-    tk.Button(reg_win, text="Register", command=register_user, bg="#0078D7", fg="white").pack(pady=10)
+    tk.Button(reg_win, text="Register", command=register_user, bg="#0078D7", fg="white").pack(pady=5)
+    tk.Button(reg_win, text="Cancel", command=reg_win.destroy,bg="#0078D7",fg="red").pack(pady=3)

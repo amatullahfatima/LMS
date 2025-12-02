@@ -11,11 +11,9 @@ os.makedirs("assets/images", exist_ok=True)
 def main():
     setup_database()
     update_database_schema()
-
     root = tk.Tk()
-    root.geometry("450x350")
-    
-    root.resizable(True, True)
+    root.geometry("480x380")
+    root.resizable(False, True)
     show_login_screen(root)
     root.mainloop()
 
