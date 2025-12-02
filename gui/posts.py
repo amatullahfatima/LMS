@@ -134,23 +134,16 @@ def open_posts_window(user_email):
             # --- DISLIKE BUTTON ---
             def dislike_post(pid=post_id):
                 posts = fetch_posts()
+                print(pid)
                 for p in posts:
                     if p[0] == pid:
+                        print(p[0],pid)
                         postings = f"post ID : {p[0]}  - email :{p[1]} - User Name: {p[2]} - content: ({p[3]}) - posted : {p[4]}\n"
                         with open('flagged.txt', 'a') as file:
                          file.write(postings)
-                    print(f"flagged:\n\t{p[0]}  -  {p[1]} -  {p[2]} -  ({p[3]}) - {p[4]}")
-                    Email = p[1]
-                    UserName = p[2]
-                    Content = p[3]
-                    DatePosted = p[4]
                 set_post_reaction(pid, user_email, "dislike")
                 refresh_feed()
 
-                r = tk.messagebox.askyesno("Report", "Would you like to report or flagg this post?", icon="warning")
-                if r:
-                    send_warning(Email, UserName, Content, DatePosted)
-                    print("Post was flagged")
             tk.Button(btn_frame,
                       text=f"Dislike ({dislikes})",
                       width=10,
