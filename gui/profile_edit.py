@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 from database.db import get_user_data, get_db_connection
 from gui.widgets.profile_picture import create_profile_picture_frame
-from gui.theme_manager import apply_theme  
 
 def edit_profile(root, user_email):
     """Open a separate window for editing the user profile."""
@@ -75,16 +74,9 @@ def edit_profile(root, user_email):
 
     tk.Button(
         edit_win, text="Save Changes",
-        bg="#4CAF50", fg="black", width=20,
-        command=lambda : save_profile()
+        bg="#4CAF50", fg="gray", width=20,
+        command=save_profile
     ).pack(pady=2)
-
-    tk.Button(
-     edit_win, text="Cancel",
-        bg="#4CAF50", fg="red", width=20,
-        command=lambda: edit_win.destroy()
-    ).pack(pady=2)
-
   
-     # Apply theme again so new buttons/labels also get styled
-    apply_theme(edit_win)
+  
+  

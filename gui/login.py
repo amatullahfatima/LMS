@@ -9,7 +9,7 @@ from gui.forgot_password import show_forgot_password_screen
 from gui.theme_manager import apply_theme  
 
 ADMIN_USER = 'admin@dcccd.edu'
-ADMIN_PASSWORD = 'adm123'
+psw = 'adm123'
 
 def clear_window(root):
     for widget in root.winfo_children():
@@ -19,7 +19,7 @@ def process_login(root, email, password):
     if not email or not password:
         messagebox.showerror("Login Failed", "Email and password are required.")
         return
-
+    print(email, password)
     user_data = verify_user_credentials(email, password)
 
     if user_data:
@@ -42,12 +42,12 @@ def show_login_screen(root):
     tk.Label(main_frame, text="Email:").grid(row=1, column=0, sticky="w", pady=5)
     email_entry = tk.Entry(main_frame, width=30)
     email_entry.grid(row=1, column=1, pady=5)
-   # email_entry.insert(0, ADMIN_USER)
+    email_entry.insert(0, ADMIN_USER)
 
     tk.Label(main_frame, text="Password:").grid(row=2, column=0, sticky="w", pady=5)
     password_entry = tk.Entry(main_frame, width=30, show="*")
     password_entry.grid(row=2, column=1, pady=5)
-    #password_entry.insert(0, ADMIN_PASSWORD)
+    password_entry.insert(0, psw)
 
     login_button = tk.Button(main_frame, text="Login", width=20,
                              command=lambda: process_login(root, email_entry.get(), password_entry.get()))

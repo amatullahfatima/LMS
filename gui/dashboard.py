@@ -1,13 +1,16 @@
 # gui/dashboard.py
 import tkinter as tk
 from tkinter import messagebox
-from database.db import get_user_data, get_all_users, delete_user_db
+
+from requests import delete
+
+from database.db import get_user_data, get_all_users, delete_user_db, delete_post
 from gui.profile_view import show_user_profile
 from gui.profile_edit import edit_profile
 from gui.forgot_password import show_forgot_password_screen
 from gui.changePassword import change_password
 
-from gui.posts import open_posts_window
+from gui.posts import open_posts_window, send_warning
 from gui.search import search_students
 from gui.widgets.profile_picture import create_profile_picture_frame
 from gui.theme_manager import toggle_theme , apply_theme
@@ -103,9 +106,62 @@ class UserManager:
             messagebox.showerror("Database Error", str(e))
 
 
+def displayFlagged():
+    postings_flagged = openFlagged()
+    rt = tk.Tk()
+    rt.title("Administrator | Flagged/Reported Posting")
+    rt.resizable(False, False)
+    rt.geometry("580x420")
+    feed_canvas = tk.Canvas(rt, bg="gray", highlightthickness=0)
+    scrollbar = tk.Scrollbar(rt, orient="vertical", command=feed_canvas.yview)
+    feed_frame = tk.Frame(feed_canvas, bg="white")
+    feed_canvas.create_window((0, 0), window=feed_frame, anchor="nw")
+    feed_canvas.configure(yscrollcommand=scrollbar.set)
+    feed_canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+    post_box = tk.Frame(feed_frame, bd=1, relief="solid", padx=10, pady=5, bg="white")
+    post_box.pack(fill="x", padx=20, pady=8)
+    i = 1
+    for posting in postings_flagged:
+        tk.Label(post_box,
+             text=f"Post #{i}\n+{posting}",
+             font=("Arial", 14),
+             bg="white",
+             wraplength=550,
+             justify="left").pack(anchor="w", pady=4)
+        tk.Button(post_box,
+                  text=f"Delete?",
+                  width=12,
+                  bg="#d9d9d9",
+                  command=delete_post(1,"mjosuea@gmail.com")).pack(side="left", padx=5)
+        i += 1
+
+
+
+
+
+
+def openFlagged():
+    file_path = 'flagged.txt'  # Replace with the actual path to your text file
+    mySet = set()
+    try:
+        with open(file_path, 'r') as f:
+            for line in f:
+                print(line)
+                cleaned_line = line.strip()
+                if cleaned_line:  # Only add non-empty lines
+                    print(cleaned_line)
+                    mySet.add(cleaned_line)
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    return mySet
+
 
 def show_admin_dashboard(root, admin_email):
     clear_window(root)
+    print(admin_email)
     root.title("Admin Dashboard")
     root.geometry("900x600")
 
@@ -120,9 +176,8 @@ def show_admin_dashboard(root, admin_email):
     Button(main_frame, text="Manage Users", width=30,
            command=lambda: show_all_users_admin(root, conn)).pack(pady=5)
     Button(main_frame, text="Manage Posts", width=30,
-           command=lambda: open_posts_window(root)).pack(pady=5)
-    # Button(main_frame, text="Notifications", width=30,
-    #        command=lambda: show_notifications_page(root, conn)).pack(pady=5)
+           command=lambda: displayFlagged()).pack(pady=5)
+    #implement Button to read all ( review ) the postings flagged
     Button(main_frame, text="Logout", width=30,
            command=lambda: from_gui_login(root)).pack(pady=20)
 

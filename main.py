@@ -4,7 +4,7 @@ from database.db import setup_database, update_database_schema
 from gui.login import show_login_screen
 import os
 
-# Ensure data and assets folders exist
+
 os.makedirs("data", exist_ok=True)
 os.makedirs("assets/images", exist_ok=True)
 

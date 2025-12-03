@@ -122,7 +122,9 @@ def verify_user_credentials(email, password):
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
+        print(user['password_hash'])
         if user and check_password(user['password_hash'], password):
+            print(user['password_hash'])
             return dict(user)
         return None
     except sqlite3.Error as e:
@@ -302,6 +304,7 @@ def delete_post(post_id: int, user_email: str) -> bool:
         return True
     finally:
         conn.close()
+    send_email(post_id, user_email, f"Deleted post: {post_id}")
 
 # ---------------- Comments ----------------
 def add_comment(post_id: int, user_email: str, comment_text: str) -> bool:
