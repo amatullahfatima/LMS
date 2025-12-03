@@ -3,6 +3,8 @@ import time
 import tkinter as tk
 from database.db import  reset_password_db, verify_user_credentials
 import tkinter as tk
+from gui.theme_manager import apply_theme  
+
 
 def update_password(rt,old_password, new_password,new_password2,userDetails):
     oldPass = old_password.get()
@@ -53,6 +55,8 @@ def change_password(user_details):
     submit_button.pack(side="left")
     cancelButton = tk.Button(rt, text="Cancel", width=15,command=lambda:rt.destroy())
     cancelButton.pack(side="right")
+    apply_theme(rt)
     rt.mainloop()
+
 
 

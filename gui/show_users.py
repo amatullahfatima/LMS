@@ -4,6 +4,7 @@ from tkinter import messagebox
 from database.db import  get_all_users, delete_user_db
 from gui.dashboard import clear_window
 from gui.dashboard import show_admin_dashboard
+from gui.theme_manager import apply_theme  
 
 def show_all_users_admin(root, admin_email):
     clear_window(root)
@@ -52,3 +53,4 @@ def show_all_users_admin(root, admin_email):
 
     tk.Button(main_frame, text="Delete Selected User", width=30, fg="red", command=prompt_delete_user).pack(pady=10)
     tk.Button(main_frame, text="Back to Admin Dashboard", width=30, command=lambda: show_admin_dashboard(root, admin_email)).pack(pady=5)
+    apply_theme(main_frame)

@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from database.db import get_db_connection
+from gui.theme_manager import apply_theme  
 
 def search_students(root, user_email):
     from gui.dashboard import clear_window, show_user_dashboard
@@ -57,3 +58,5 @@ def search_students(root, user_email):
 
     tk.Button(main_frame, text="Search", width=15, command=perform_search).grid(row=2, column=0, columnspan=2, pady=10)
     tk.Button(main_frame, text="Back to Dashboard", width=20, command=lambda: show_user_dashboard(root, user_email, None)).grid(row=4, column=0, columnspan=2, pady=5)
+    # Apply theme again so new buttons/labels also get styled
+    apply_theme(main_frame)
