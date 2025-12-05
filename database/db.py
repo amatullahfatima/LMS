@@ -8,6 +8,8 @@ import os
 DB_NAME = os.path.join("data", "social_media.db")
 ADMIN_USER = 'admin@dcccd.edu'
 TIME_FORMAT = "%m/%d/%Y at %H:%M"
+
+
 def get_db_connection():
     try:
         conn = sqlite3.connect(DB_NAME)
@@ -15,8 +17,10 @@ def get_db_connection():
         return conn
     except sqlite3.Error as e:
         print(f"Database connection error: {e}")
-        messagebox.showerror("Database Error", "Failed to connect to the database.")
+        messagebox.showerror(
+            "Database Error", "Failed to connect to the database.")
         return None
+
 
 def setup_database():
     conn = get_db_connection()
@@ -93,6 +97,7 @@ def setup_database():
 
 # --- User CRUD and authentication helpers
 
+
 def register_user_db(email, password, name):
     conn = get_db_connection()
     if conn is None:
@@ -106,13 +111,16 @@ def register_user_db(email, password, name):
         conn.commit()
         return True
     except sqlite3.IntegrityError:
-        messagebox.showerror("Registration Failed", "A user with this email already exists.")
+        messagebox.showerror("Registration Failed",
+                             "A user with this email already exists.")
         return False
     except sqlite3.Error as e:
-        messagebox.showerror("Database Error", f"An error occurred during registration: {e}")
+        messagebox.showerror(
+            "Database Error", f"An error occurred during registration: {e}")
         return False
     finally:
         conn.close()
+
 
 def verify_user_credentials(email, password):
     conn = get_db_connection()
@@ -133,6 +141,7 @@ def verify_user_credentials(email, password):
     finally:
         conn.close()
 
+
 def get_all_users():
     conn = get_db_connection()
     if conn is None:
@@ -147,13 +156,15 @@ def get_all_users():
     finally:
         conn.close()
 
+
 def get_user_data(email):
     conn = get_db_connection()
     if conn is None:
         return None
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email, name, bio, role, created_at, grad_year, major, profile_picture FROM users WHERE email = ?", (email,))
+        cursor.execute(
+            "SELECT id, email, name, bio, role, created_at, grad_year, major, profile_picture FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
         return dict(user) if user else None
     except sqlite3.Error as e:
@@ -161,7 +172,7 @@ def get_user_data(email):
         return None
     finally:
         conn.close()
-    
+
 
 def update_profile_picture_in_db(email: str, profile_picture_path: str) -> bool:
     """
@@ -173,7 +184,8 @@ def update_profile_picture_in_db(email: str, profile_picture_path: str) -> bool:
         return False
     try:
         cursor = conn.cursor()
-        cursor.execute("UPDATE users SET profile_picture = ? WHERE email = ?", (profile_picture_path, email))
+        cursor.execute("UPDATE users SET profile_picture = ? WHERE email = ?",
+                       (profile_picture_path, email))
         conn.commit()
         return cursor.rowcount > 0
     except sqlite3.Error as e:
@@ -181,6 +193,8 @@ def update_profile_picture_in_db(email: str, profile_picture_path: str) -> bool:
         return False
     finally:
         conn.close()
+
+
 def delete_user_db(email):
     conn = get_db_connection()
     if conn is None:
@@ -192,7 +206,8 @@ def delete_user_db(email):
         return cursor.rowcount > 0
     except sqlite3.Error as e:
         print(f"Error deleting user: {e}")
-        messagebox.showerror("Database Error", f"An error occurred while deleting user: {e}")
+        messagebox.showerror(
+            "Database Error", f"An error occurred while deleting user: {e}")
         return False
     finally:
         conn.close()
@@ -210,6 +225,8 @@ def update_database_schema():
         print(f"Error updating schema: {e}")
     finally:
         conn.close()
+
+
 def reset_password_db(email, new_password):
     """Handles password reset logic in database layer."""
     conn = get_db_connection()
@@ -225,7 +242,8 @@ def reset_password_db(email, new_password):
             return False, "No user found with that email."
 
         new_hash = hash_password(new_password)
-        cursor.execute("UPDATE users SET password_hash = ? WHERE email = ?", (new_hash, email))
+        cursor.execute(
+            "UPDATE users SET password_hash = ? WHERE email = ?", (new_hash, email))
         conn.commit()
         return True, "Password updated successfully! Please log in again."
 
@@ -233,7 +251,6 @@ def reset_password_db(email, new_password):
         return False, f"Database Error: {e}"
     finally:
         conn.close()
-
 
 
 # --- Posts and comments (original logic preserved)
@@ -245,12 +262,14 @@ def create_post(user_email, content):
         return
     try:
         c = conn.cursor()
-        c.execute("INSERT INTO posts (email, content, created_at) VALUES (?, ?, ?)", (user_email, content, ts))
+        c.execute("INSERT INTO posts (email, content, created_at) VALUES (?, ?, ?)",
+                  (user_email, content, ts))
         conn.commit()
     except sqlite3.Error as e:
         print(f"Error creating post: {e}")
     finally:
         conn.close()
+
 
 def fetch_posts():
     conn = get_db_connection()
@@ -285,6 +304,7 @@ def update_post(post_id: int, new_text: str) -> bool:
     finally:
         conn.close()
 
+
 def delete_post(post_id: int, user_email: str) -> bool:
     """
     Delete a post if it belongs to user_email.
@@ -307,6 +327,8 @@ def delete_post(post_id: int, user_email: str) -> bool:
     send_email(post_id, user_email, f"Deleted post: {post_id}")
 
 # ---------------- Comments ----------------
+
+
 def add_comment(post_id: int, user_email: str, comment_text: str) -> bool:
     """Insert a comment (stores email linking to users table)."""
     if not comment_text:
@@ -329,6 +351,7 @@ def add_comment(post_id: int, user_email: str, comment_text: str) -> bool:
     finally:
         conn.close()
 
+
 def get_comments(post_id: int):
     """Return comments for a post as list of rows with username/email and comment_text."""
     conn = get_db_connection()
@@ -347,6 +370,8 @@ def get_comments(post_id: int):
         conn.close()
 
 # ---------------- Reactions ----------------
+
+
 def get_reaction_counts(post_id: int):
     """Return a dict {'like': n, 'dislike': m} for given post."""
     conn = get_db_connection()
@@ -366,6 +391,7 @@ def get_reaction_counts(post_id: int):
     finally:
         conn.close()
 
+
 def set_reaction(post_id: int, user_email: str, reaction_type: str):
     """
     Toggle or set reaction for (post_id, user_email). reaction_type in ('like','dislike').
@@ -384,7 +410,8 @@ def set_reaction(post_id: int, user_email: str, reaction_type: str):
         if existing:
             if existing['reaction_type'] == reaction_type:
                 # toggle off
-                cur.execute("DELETE FROM post_reactions WHERE post_id = ? AND email = ?", (post_id, user_email))
+                cur.execute(
+                    "DELETE FROM post_reactions WHERE post_id = ? AND email = ?", (post_id, user_email))
             else:
                 cur.execute("UPDATE post_reactions SET reaction_type = ?, reacted_at = ? WHERE post_id = ? AND email = ?",
                             (reaction_type, now, post_id, user_email))
@@ -394,6 +421,8 @@ def set_reaction(post_id: int, user_email: str, reaction_type: str):
         conn.commit()
     finally:
         conn.close()
+
+
 def get_reaction_summary(post_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -458,6 +487,7 @@ def follow_user(follower_email, following_email):
     conn.close()
     return True
 
+
 def unfollow_user(follower_email, following_email):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -467,6 +497,7 @@ def unfollow_user(follower_email, following_email):
     )
     conn.commit()
     conn.close()
+
 
 def is_following(follower_email, following_email):
     conn = get_db_connection()
@@ -479,18 +510,22 @@ def is_following(follower_email, following_email):
     conn.close()
     return row is not None
 
+
 def count_followers(email):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM followers WHERE following_email=?", (email,))
+    cur.execute(
+        "SELECT COUNT(*) FROM followers WHERE following_email=?", (email,))
     count = cur.fetchone()[0]
     conn.close()
     return count
 
+
 def count_following(email):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM followers WHERE follower_email=?", (email,))
+    cur.execute(
+        "SELECT COUNT(*) FROM followers WHERE follower_email=?", (email,))
     count = cur.fetchone()[0]
     conn.close()
     return count
