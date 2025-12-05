@@ -9,7 +9,7 @@ from gui.profile_view import show_user_profile
 from gui.profile_edit import edit_profile
 from gui.forgot_password import show_forgot_password_screen
 from gui.changePassword import change_password
-
+from gui.settings import open_settings
 from gui.posts import open_posts_window, send_warning
 from gui.search import search_students
 from gui.widgets.profile_picture import create_profile_picture_frame
@@ -34,23 +34,33 @@ def show_user_dashboard(root, user_email, user_id):
         show_login_screen(root)
         return
 
+
+
     main_frame = tk.Frame(root, padx=50, pady=50)
     main_frame.pack(expand=True)
    
-
+  
     pic_frame = create_profile_picture_frame(main_frame, user_email, user_data.get("profile_picture"), editable=False)
     pic_frame.pack(pady=10)
     tk.Label(main_frame, text=f"Welcome, {user_data.get('name', 'User')}!", font=("Arial", 18, "bold")).pack(pady=10)
     tk.Label(main_frame, text="This is your main dashboard.", font=("Arial", 12)).pack(pady=3)
-    tk.Button(main_frame, text="↻",font=("Arial", 20 , "bold"), width=30, bd=0, command=lambda: show_user_dashboard(root, user_email, user_id)).pack(pady=3)
+    
+    settings_row = tk.Frame(main_frame) #, padx=50, pady=50
+    settings_row.pack(pady=10)
+
+    
+    tk.Button(settings_row,text="🌓" ,width=10,command=lambda: switch_theme(root)).pack(side="left", padx=5)
+    tk.Button(settings_row,text="Settings" ,width=10,command=lambda:open_settings(root, user_email)).pack(side="left", padx=5)
+    tk.Button(settings_row, text="Refresh", width=10, command=lambda: show_user_dashboard(root, user_email, user_id)).pack(side="left", padx=5)
+   
+   
     tk.Button(main_frame, text="View Profile", width=30, command=lambda: show_user_profile(root, user_email)).pack(pady=3)
     tk.Button(main_frame, text="Edit Profile", width=30, command=lambda: edit_profile(root, user_email  )).pack(pady=3)
     tk.Button(main_frame, text="Search Students", width=30, command=lambda: search_students(root, user_email)).pack(pady=3)
     tk.Button(main_frame, text="Open Posts", width=30, command=lambda: open_posts_window(user_email)).pack(pady=3)
     tk.Button(main_frame, text="Logout", width=30, command=lambda: from_gui_login(root)).pack(pady=3)
     tk.Button(main_frame,text="Change Password" ,width=30,command=lambda:change_password(user_data)).pack(pady=6)
-    tk.Button(main_frame,text="🌓" ,width=30,command=lambda: switch_theme(root)).pack(pady=6)
-
+    
     apply_theme(main_frame)
 
 def from_gui_login(root):

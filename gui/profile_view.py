@@ -49,7 +49,7 @@ def show_user_profile(root, user_email):
     tk.Label(main_frame, text=f"Email: {user_data.get('email', 'N/A')}").pack(anchor="w", pady=2)
     tk.Label(main_frame, text=f"Role: {user_data.get('role', 'user').capitalize()}").pack(anchor="w", pady=2)
     tk.Label(main_frame, text=f"Graduation Year: {user_data.get('grad_year', 'N/A')}").pack(anchor="w", pady=2)
-    tk.Label(main_frame, text=f"Major: {user_data.get('major', 'user').capitalize()}").pack(anchor="w", pady=2)
+    tk.Label(main_frame, text=f"Major: {user_data.get('major', 'user')}").pack(anchor="w", pady=2)
     tk.Label(main_frame, text=f"Bio: {user_data.get('bio', 'No bio provided')}").pack(anchor="w", pady=2)
 
     btn_frame = tk.Frame(main_frame)

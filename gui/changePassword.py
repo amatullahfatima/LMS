@@ -4,6 +4,8 @@ import tkinter as tk
 from database.db import  reset_password_db, verify_user_credentials
 import tkinter as tk
 from gui.theme_manager import apply_theme  
+from database.db import get_user_data
+
 
 
 def update_password(rt,old_password, new_password,new_password2,userDetails):
@@ -34,9 +36,9 @@ def change_password(user_details):
     rt.title(f"Change Password...")
     rt.geometry("280x300")
     #user data
-
+    user_data = get_user_data(user_details)
     #old Password
-    tk.Label(rt, text=f"Changing Password for :\n{ user_details['name']}\n",font=("Times New Roman", 16 ,"bold")).pack()
+    tk.Label(rt, text=f"Changing Password for \n{ user_data.get("name")}\n",font=( 16 )).pack(pady=20)
     tk.Label(rt, text="Enter your old password").pack()
     oldpass = tk.Entry(rt, width=20,show="*")
     oldpass.pack(pady=5)
@@ -52,9 +54,9 @@ def change_password(user_details):
 
     submit_button = tk.Button(rt, text="Submit",width=15, command=lambda:
     (update_password(rt,oldpass,newPass,newPass2,user_details)))
-    submit_button.pack(side="left")
+    submit_button.pack(pady=10)
     cancelButton = tk.Button(rt, text="Cancel", width=15,command=lambda:rt.destroy())
-    cancelButton.pack(side="right")
+    cancelButton.pack(pady=10)
     apply_theme(rt)
     rt.mainloop()
 

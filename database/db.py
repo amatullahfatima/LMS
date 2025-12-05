@@ -122,7 +122,9 @@ def verify_user_credentials(email, password):
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
+        print("here...")
         print(user['password_hash'])
+        print(check_password(user['password_hash'], password))
         if user and check_password(user['password_hash'], password):
             print(user['password_hash'])
             return dict(user)
@@ -494,3 +496,17 @@ def count_following(email):
     count = cur.fetchone()[0]
     conn.close()
     return count
+
+
+def update_email_in_db(old_email, new_email):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("UPDATE users SET email=? WHERE email=?", (new_email, old_email))
+        conn.commit()
+        return cursor.rowcount > 0
+    except:
+        return False
+    finally:
+        conn.close()
