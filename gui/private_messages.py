@@ -1,7 +1,9 @@
 # gui/private_messages.py
 import sqlite3
-from tkinter import Tk, Label, Button, Entry, Text, END, Listbox, Scrollbar
-from tkinter import messagebox
+from tkinter import (
+    Toplevel, Tk, Label, Button, Entry, Text, END, Listbox,
+    Scrollbar, messagebox, Frame
+)
 from datetime import datetime
 import os
 
@@ -9,7 +11,6 @@ import os
 DB_NAME = os.path.join("data", "social_media.db")
 
 def get_db_connection():
-    """Connect to SQLite database"""
     try:
         conn = sqlite3.connect(DB_NAME)
         conn.row_factory = sqlite3.Row
@@ -19,18 +20,28 @@ def get_db_connection():
         return None
 
 def setup_messages_table():
-    """Create messages table if it does not exist"""
+    """Create messages table if missing and add is_read column if missing"""
+    os.makedirs("data", exist_ok=True)
     conn = get_db_connection()
     if conn:
         try:
             cursor = conn.cursor()
+            
+            # Add is_read column if it doesn't exist
+            try:
+                cursor.execute("SELECT is_read FROM messages LIMIT 1")
+            except sqlite3.OperationalError:
+                cursor.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0;")
+
+            # Create table if missing
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     sender_email TEXT NOT NULL,
                     receiver_email TEXT NOT NULL,
                     message_text TEXT NOT NULL,
-                    timestamp TEXT NOT NULL
+                    timestamp TEXT NOT NULL,
+                    is_read INTEGER DEFAULT 0
                 );
             """)
             conn.commit()
@@ -39,10 +50,8 @@ def setup_messages_table():
         finally:
             conn.close()
 
-# -------------------- Message Functions --------------------
-
+# -------------------- Core Message Functions --------------------
 def send_private_message(sender_email, receiver_email, message_text):
-    """Insert a new message into the database"""
     if not sender_email or not receiver_email or not message_text:
         return False
     conn = get_db_connection()
@@ -50,9 +59,14 @@ def send_private_message(sender_email, receiver_email, message_text):
         try:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO messages (sender_email, receiver_email, message_text, timestamp)
-                VALUES (?, ?, ?, ?)
-            """, (sender_email, receiver_email, message_text, datetime.now().strftime("%m/%d/%Y %H:%M:%S")))
+                INSERT INTO messages (sender_email, receiver_email, message_text, timestamp, is_read)
+                VALUES (?, ?, ?, ?, 0)
+            """, (
+                sender_email,
+                receiver_email,
+                message_text,
+                datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+            ))
             conn.commit()
             return True
         except sqlite3.Error as e:
@@ -63,14 +77,13 @@ def send_private_message(sender_email, receiver_email, message_text):
     return False
 
 def get_inbox(user_email):
-    """Retrieve all messages sent to a user"""
     conn = get_db_connection()
     messages = []
     if conn:
         try:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT sender_email, message_text, timestamp
+                SELECT id, sender_email, message_text, timestamp, is_read
                 FROM messages
                 WHERE receiver_email = ?
                 ORDER BY timestamp DESC
@@ -82,51 +95,76 @@ def get_inbox(user_email):
             conn.close()
     return messages
 
-# -------------------- Tkinter GUI --------------------
+def mark_as_read(message_id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE messages SET is_read = 1 WHERE id = ?", (message_id,))
+            conn.commit()
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Failed to mark message as read: {e}")
+        finally:
+            conn.close()
 
+# -------------------- GUI Class --------------------
 class PrivateMessageApp:
-    def __init__(self, master):
+    def __init__(self, master, user_email, receiver_email=None, refresh_interval=5000):
+        """Initialize the messaging UI."""
         self.master = master
-        master.title("Private Messages")
-        master.geometry("600x500")
+        self.user_email = user_email
+        self.refresh_interval = refresh_interval
 
-        self.sender_label = Label(master, text="Your Email:")
-        self.sender_label.pack()
+        master.title("Private Messages")
+        master.geometry("650x550")
+
+        # ---------- Sender ----------
+        Label(master, text="Your Email:").pack()
         self.sender_entry = Entry(master, width=50)
         self.sender_entry.pack()
+        self.sender_entry.insert(0, user_email)
+        self.sender_entry.config(state="readonly")
 
-        self.receiver_label = Label(master, text="Recipient Email:")
-        self.receiver_label.pack()
+        # ---------- Recipient ----------
+        Label(master, text="Recipient Email:").pack()
         self.receiver_entry = Entry(master, width=50)
         self.receiver_entry.pack()
+        if receiver_email:
+            self.receiver_entry.insert(0, receiver_email)
 
-        self.message_label = Label(master, text="Message:")
-        self.message_label.pack()
-        self.message_text = Text(master, width=60, height=5)
+        # ---------- Message Box ----------
+        Label(master, text="Message:").pack()
+        self.message_text = Text(master, width=70, height=5)
         self.message_text.pack()
 
-        self.send_button = Button(master, text="Send Message", command=self.send_message)
-        self.send_button.pack(pady=5)
+        Button(master, text="Send Message", command=self.send_message).pack(pady=5)
 
-        self.inbox_label = Label(master, text="Inbox:")
-        self.inbox_label.pack()
+        # ---------- Inbox ----------
+        Label(master, text="Inbox:", font=("Arial", 12, "bold")).pack(pady=10)
+        list_frame = Frame(master)
+        list_frame.pack()
 
-        self.scrollbar = Scrollbar(master)
-        self.scrollbar.pack(side="right", fill="y")
+        scrollbar = Scrollbar(list_frame)
+        scrollbar.pack(side="right", fill="y")
 
-        self.inbox_listbox = Listbox(master, width=80, height=15, yscrollcommand=self.scrollbar.set)
+        self.inbox_listbox = Listbox(list_frame, width=85, height=15, yscrollcommand=scrollbar.set)
         self.inbox_listbox.pack()
-        self.scrollbar.config(command=self.inbox_listbox.yview)
+        scrollbar.config(command=self.inbox_listbox.yview)
 
-        self.refresh_button = Button(master, text="Refresh Inbox", command=self.load_inbox)
-        self.refresh_button.pack(pady=5)
+        Button(master, text="Refresh Inbox", command=self.load_inbox).pack(pady=5)
 
+        # Start auto-refresh
+        self.load_inbox()
+        self.master.after(self.refresh_interval, self.auto_refresh_inbox)
+
+    # -------------------- Button Functions --------------------
     def send_message(self):
         sender = self.sender_entry.get().strip()
         receiver = self.receiver_entry.get().strip()
-        text = self.message_text.get("1.0", END).strip()
-        if send_private_message(sender, receiver, text):
-            messagebox.showinfo("Success", "Message sent successfully!")
+        message = self.message_text.get("1.0", END).strip()
+
+        if send_private_message(sender, receiver, message):
+            messagebox.showinfo("Success", "Message sent!")
             self.message_text.delete("1.0", END)
             self.load_inbox()
         else:
@@ -134,17 +172,35 @@ class PrivateMessageApp:
 
     def load_inbox(self):
         self.inbox_listbox.delete(0, END)
-        user_email = self.sender_entry.get().strip()
-        messages = get_inbox(user_email)
+        messages = get_inbox(self.user_email)
+        if not messages:
+            self.inbox_listbox.insert(END, "No messages.")
+            return
         for msg in messages:
-            display_text = f"From: {msg['sender_email']} | {msg['timestamp']}\n{msg['message_text']}"
-            self.inbox_listbox.insert(END, display_text)
-            self.inbox_listbox.insert(END, "-"*60)
+            display = f"From: {msg['sender_email']} | {msg['timestamp']}\n{msg['message_text']}"
+            if msg['is_read'] == 0:
+                self.inbox_listbox.insert(END, display)
+                self.inbox_listbox.itemconfig(END, {'bg':'lightyellow'})  # Highlight unread
+            else:
+                self.inbox_listbox.insert(END, display)
+            self.inbox_listbox.insert(END, "-" * 70)
+            mark_as_read(msg['id'])  # Mark as read after displaying
 
-# -------------------- Main --------------------
+    def auto_refresh_inbox(self):
+        """Automatically refresh inbox every few seconds."""
+        self.load_inbox()
+        self.master.after(self.refresh_interval, self.auto_refresh_inbox)
+
+# -------------------- Helper Function --------------------
+def open_private_messages(root, user_email, receiver_email=None):
+    setup_messages_table()
+    msg_win = Toplevel(root)
+    PrivateMessageApp(msg_win, user_email, receiver_email)
+
+# -------------------- Standalone Mode --------------------
 if __name__ == "__main__":
     os.makedirs("data", exist_ok=True)
     setup_messages_table()
     root = Tk()
-    app = PrivateMessageApp(root)
+    PrivateMessageApp(root, "test@example.com")
     root.mainloop()
