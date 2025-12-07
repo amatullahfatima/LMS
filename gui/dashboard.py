@@ -1,32 +1,32 @@
 # gui/dashboard.py
 import tkinter as tk
-from tkinter import messagebox
-
+from tkinter import messagebox, Tk, Frame, Label, Button, Entry
 from requests import delete
+import os
 
-from database.db import get_user_data, get_all_users, delete_user_db, delete_post
+from database.db import get_user_data, get_all_users, delete_user_db, delete_post, get_db_connection
 from gui.profile_view import show_user_profile
 from gui.profile_edit import edit_profile
 from gui.forgot_password import show_forgot_password_screen
 from gui.changePassword import change_password
-
 from gui.posts import open_posts_window, send_warning
 from gui.search import search_students
 from gui.widgets.profile_picture import create_profile_picture_frame
-from gui.theme_manager import toggle_theme , apply_theme
+from gui.theme_manager import toggle_theme, apply_theme
 from gui.theme_utils import switch_theme
+from gui.private_messages import PrivateMessageApp, setup_messages_table
 
+# -------------------- Core Dashboard Functions --------------------
 def clear_window(root):
     for widget in root.winfo_children():
         widget.destroy()
     apply_theme(root)
-    
+
 def show_user_dashboard(root, user_email, user_id):
     clear_window(root)
     root.title("User Dashboard")
     root.geometry("1300x1100")
   
-
     user_data = get_user_data(user_email)
     if not user_data:
         messagebox.showerror("Error", "User data not found.")
@@ -37,19 +37,36 @@ def show_user_dashboard(root, user_email, user_id):
     main_frame = tk.Frame(root, padx=50, pady=50)
     main_frame.pack(expand=True)
    
-
     pic_frame = create_profile_picture_frame(main_frame, user_email, user_data.get("profile_picture"), editable=False)
     pic_frame.pack(pady=10)
     tk.Label(main_frame, text=f"Welcome, {user_data.get('name', 'User')}!", font=("Arial", 18, "bold")).pack(pady=10)
     tk.Label(main_frame, text="This is your main dashboard.", font=("Arial", 12)).pack(pady=3)
-    tk.Button(main_frame, text="↻",font=("Arial", 20 , "bold"), width=30, bd=0, command=lambda: show_user_dashboard(root, user_email, user_id)).pack(pady=3)
-    tk.Button(main_frame, text="View Profile", width=30, command=lambda: show_user_profile(root, user_email)).pack(pady=3)
-    tk.Button(main_frame, text="Edit Profile", width=30, command=lambda: edit_profile(root, user_email  )).pack(pady=3)
-    tk.Button(main_frame, text="Search Students", width=30, command=lambda: search_students(root, user_email)).pack(pady=3)
-    tk.Button(main_frame, text="Open Posts", width=30, command=lambda: open_posts_window(user_email)).pack(pady=3)
+    
+    # ---------- Reverted Refresh Button ----------
+    tk.Button(main_frame, text="↻", font=("Arial", 20 , "bold"), width=30, bd=0,
+              command=lambda: show_user_dashboard(root, user_email, user_id)).pack(pady=3)
+    
+    tk.Button(main_frame, text="View Profile", width=30,
+              command=lambda: show_user_profile(root, user_email)).pack(pady=3)
+    tk.Button(main_frame, text="Edit Profile", width=30,
+              command=lambda: edit_profile(user_email)).pack(pady=3)
+    tk.Button(main_frame, text="Search Students", width=30,
+              command=lambda: search_students(root, user_email)).pack(pady=3)
+    tk.Button(main_frame, text="Open Posts", width=30,
+              command=lambda: open_posts_window(user_email)).pack(pady=3)
+    tk.Button(main_frame, text="Messages", width=30,
+              command=lambda: open_private_messages(root, user_email)).pack(pady=3)
+    
+    # ----------------- Private Messages Button -----------------
+    os.makedirs("data", exist_ok=True)
+    setup_messages_table()
+    tk.Button(main_frame, text="Private Messages", width=30,
+              command=lambda: open_private_messages(root, user_email)).pack(pady=3)
+
     tk.Button(main_frame, text="Logout", width=30, command=lambda: from_gui_login(root)).pack(pady=3)
-    tk.Button(main_frame,text="Change Password" ,width=30,command=lambda:change_password(user_data)).pack(pady=6)
-    tk.Button(main_frame,text="🌓" ,width=30,command=lambda: switch_theme(root)).pack(pady=6)
+    tk.Button(main_frame, text="Change Password", width=30,
+              command=lambda: change_password(user_data)).pack(pady=6)
+    tk.Button(main_frame, text="🌓", width=30, command=lambda: switch_theme(root)).pack(pady=6)
 
     apply_theme(main_frame)
 
@@ -57,17 +74,19 @@ def from_gui_login(root):
     from gui.login import show_login_screen
     show_login_screen(root)
 
-# --- Admin dashboard ---
-
-# gui/dashboard.py
-
-from database.db import get_db_connection
-from gui.dashboard import clear_window
-from gui.posts import open_posts_window
-from tkinter import messagebox, Tk, Frame, Label, Button, Entry
+# ----------------- Private Messages Helper -----------------
+def open_private_messages(root, user_email):
+    """Open private messages window"""
+    pm_win = tk.Toplevel(root)
+    pm_win.title("Private Messages")
+    pm_win.geometry("600x500")
+    app = PrivateMessageApp(pm_win)
+    # Pre-fill sender email with current user
+    app.sender_entry.delete(0, tk.END)
+    app.sender_entry.insert(0, user_email)
+    app.load_inbox()
 
 # ---------------------- User Management Helper ----------------------
-
 class UserManager:
     @staticmethod
     def deactivate_user(conn, email):
@@ -105,7 +124,7 @@ class UserManager:
         except Exception as e:
             messagebox.showerror("Database Error", str(e))
 
-
+# ---------------------- Admin Dashboard Functions ----------------------
 def displayFlagged():
     postings_flagged = openFlagged()
     rt = tk.Tk()
@@ -136,28 +155,20 @@ def displayFlagged():
                   command=delete_post(1,"mjosuea@gmail.com")).pack(side="left", padx=5)
         i += 1
 
-
-
-
-
-
 def openFlagged():
-    file_path = 'flagged.txt'  # Replace with the actual path to your text file
+    file_path = 'flagged.txt'
     mySet = set()
     try:
         with open(file_path, 'r') as f:
             for line in f:
-                print(line)
                 cleaned_line = line.strip()
-                if cleaned_line:  # Only add non-empty lines
-                    print(cleaned_line)
+                if cleaned_line:
                     mySet.add(cleaned_line)
     except FileNotFoundError:
         print(f"Error: The file '{file_path}' was not found.")
     except Exception as e:
         print(f"An error occurred: {e}")
     return mySet
-
 
 def show_admin_dashboard(root, admin_email):
     clear_window(root)
@@ -177,24 +188,8 @@ def show_admin_dashboard(root, admin_email):
            command=lambda: show_all_users_admin(root, conn)).pack(pady=5)
     Button(main_frame, text="Manage Posts", width=30,
            command=lambda: displayFlagged()).pack(pady=5)
-    #implement Button to read all ( review ) the postings flagged
     Button(main_frame, text="Logout", width=30,
            command=lambda: from_gui_login(root)).pack(pady=20)
-
-
-# def show_admin_dashboard(root, admin_email):
-#     clear_window(root)
-#     root.title("Admin Dashboard - User Management")
-
-#     main_frame = tk.Frame(root, padx=30, pady=30)
-#     main_frame.pack(expand=True)
-
-#     tk.Label(main_frame, text="Admin Console", font=("Arial", 20, "bold"), fg="#8b0000").pack(pady=20)
-#     tk.Label(main_frame, text=f"Logged in as: {admin_email}", font=("Arial", 10)).pack(pady=5)
-
-#     tk.Button(main_frame, text="View All Users", width=30, command=lambda: show_all_users_admin(root, admin_email)).pack(pady=5)
-#     tk.Button(main_frame, text="Register New User", width=30, command=lambda: from_gui_login(root)).pack(pady=5)
-#     tk.Button(main_frame, text="Logout", width=30, command=lambda: from_gui_login(root)).pack(pady=20)
 
 def show_all_users_admin(root, admin_email):
     clear_window(root)
